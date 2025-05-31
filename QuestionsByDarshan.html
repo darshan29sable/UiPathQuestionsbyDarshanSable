@@ -6,7 +6,6 @@
   <title>UiPath 100 Questions</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
   <script>
-    // Set the worker source
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
   </script>
   <style>
@@ -49,16 +48,12 @@
       border: 1px solid #ccc;
       border-radius: 8px;
     }
-    .pdf-content {
-      white-space: pre-wrap;
-      background-color: #fdfdfd;
-      border: 1px solid #ccc;
-      padding: 16px;
-      border-radius: 8px;
+    .pdf-container canvas {
+      width: 100%;
       margin-bottom: 10px;
-      max-height: 400px;
-      overflow-y: auto;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
     }
     nav {
       display: flex;
@@ -132,7 +127,7 @@
       div.id = 'question-' + i;
       div.innerHTML = `
         <h2 style="margin-bottom: 10px;">Question ${i}</h2>
-        <div class="pdf-content" id="pdf-text-${i}">Loading content...</div>
+        <div class="pdf-container" id="pdf-container-${i}">Loading PDF...</div>
         <a href="pdfs/question${i}.pdf" download>Download PDF</a>
       `;
       container.appendChild(div);
@@ -143,26 +138,24 @@
       dropdown.appendChild(option);
     }
 
-    function loadPDFText(url, containerId) {
-      const loadingTask = pdfjsLib.getDocument(url);
-      loadingTask.promise.then(pdf => {
-        let allText = [];
-        let loadPage = (pageNum) => {
+    function renderPDFCanvas(url, containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = 'Loading PDF...';
+      pdfjsLib.getDocument(url).promise.then(pdf => {
+        container.innerHTML = '';
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           pdf.getPage(pageNum).then(page => {
-            return page.getTextContent().then(textContent => {
-              const textItems = textContent.items.map(item => item.str);
-              allText.push(textItems.join(' '));
-              if (pageNum < pdf.numPages) {
-                loadPage(pageNum + 1);
-              } else {
-                document.getElementById(containerId).textContent = allText.join('\n\n');
-              }
-            });
+            const viewport = page.getViewport({ scale: 1.2 });
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            container.appendChild(canvas);
+            page.render({ canvasContext: context, viewport: viewport });
           });
-        };
-        loadPage(1);
+        }
       }).catch(err => {
-        document.getElementById(containerId).textContent = "Unable to load PDF content.";
+        container.innerHTML = "Unable to load PDF content.";
         console.error(err);
       });
     }
@@ -173,7 +166,7 @@
       div.classList.add('active');
       document.getElementById('question-number').innerText = `Question ${index} of ${totalQuestions}`;
       dropdown.value = index;
-      loadPDFText(`pdfs/question${index}.pdf`, `pdf-text-${index}`);
+      renderPDFCanvas(`pdfs/question${index}.pdf`, `pdf-container-${index}`);
     }
 
     function nextQuestion() {
