@@ -4,6 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>UiPath 100 Questions</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <script>
+    // Set the worker source
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+  </script>
   <style>
     body {
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -44,13 +49,16 @@
       border: 1px solid #ccc;
       border-radius: 8px;
     }
-    iframe {
-      width: 100%;
-      height: 600px;
+    .pdf-content {
+      white-space: pre-wrap;
+      background-color: #fdfdfd;
       border: 1px solid #ccc;
+      padding: 16px;
       border-radius: 8px;
+      margin-bottom: 10px;
+      max-height: 400px;
+      overflow-y: auto;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-      margin-bottom: 20px;
     }
     nav {
       display: flex;
@@ -124,7 +132,8 @@
       div.id = 'question-' + i;
       div.innerHTML = `
         <h2 style="margin-bottom: 10px;">Question ${i}</h2>
-        <iframe src="pdfs/question${i}.pdf"></iframe>
+        <div class="pdf-content" id="pdf-text-${i}">Loading content...</div>
+        <a href="pdfs/question${i}.pdf" download>Download PDF</a>
       `;
       container.appendChild(div);
 
@@ -134,11 +143,37 @@
       dropdown.appendChild(option);
     }
 
+    function loadPDFText(url, containerId) {
+      const loadingTask = pdfjsLib.getDocument(url);
+      loadingTask.promise.then(pdf => {
+        let allText = [];
+        let loadPage = (pageNum) => {
+          pdf.getPage(pageNum).then(page => {
+            return page.getTextContent().then(textContent => {
+              const textItems = textContent.items.map(item => item.str);
+              allText.push(textItems.join(' '));
+              if (pageNum < pdf.numPages) {
+                loadPage(pageNum + 1);
+              } else {
+                document.getElementById(containerId).textContent = allText.join('\n\n');
+              }
+            });
+          });
+        };
+        loadPage(1);
+      }).catch(err => {
+        document.getElementById(containerId).textContent = "Unable to load PDF content.";
+        console.error(err);
+      });
+    }
+
     function showQuestion(index) {
       document.querySelectorAll('.question').forEach(q => q.classList.remove('active'));
-      document.getElementById('question-' + index).classList.add('active');
+      const div = document.getElementById('question-' + index);
+      div.classList.add('active');
       document.getElementById('question-number').innerText = `Question ${index} of ${totalQuestions}`;
       dropdown.value = index;
+      loadPDFText(`pdfs/question${index}.pdf`, `pdf-text-${index}`);
     }
 
     function nextQuestion() {
