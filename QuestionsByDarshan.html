@@ -50,16 +50,43 @@
       font-size: 1.1rem;
       color: #cfd8dc;
     }
-    main {
-      max-width: 950px;
+
+    .container {
+      display: flex;
+      max-width: 1200px;
       margin: 40px auto;
-      padding: 25px;
+      gap: 20px;
+      padding: 0 20px;
+    }
+
+    .summary {
+      width: 25%;
       background-color: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      position: relative;
+      z-index: 2;
+      font-size: 15px;
+    }
+
+    .summary h3 {
+      margin-top: 0;
+      color: #2f4b7c;
+      font-size: 1.3rem;
+    }
+
+    main {
+      width: 75%;
+      margin: 0;
+      background-color: #ffffff;
+      padding: 25px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
       border-radius: 12px;
       position: relative;
       z-index: 2;
     }
+
     select {
       width: 100%;
       padding: 12px;
@@ -137,25 +164,35 @@
     <h1>UiPath Questions by Darshan Sable</h1>
     <p>Explore questions and solutions shared with the RPA community on LinkedIn which are the part of <a href="https://www.linkedin.com/in/darshan-sable-7a29431b3/" style="color:white">@DarshanSable</a>'s daily question challenge</p>
   </header>
-  <main>
-    <select id="dropdown" onchange="goToQuestion(this.value)"></select>
-    <nav>
-      <button onclick="prevQuestion()">Previous</button>
-      <span id="question-number">Question 1 of 100</span>
-      <button onclick="nextQuestion()">Next</button>
-    </nav>
-    <div id="questions-container"></div>
-    <nav>
-      <button onclick="prevQuestion()">Previous</button>
-      <span id="question-number">Question 1 of 100</span>
-      <button onclick="nextQuestion()">Next</button>
-    </nav>
-  </main>
+
+  <div class="container">
+    <aside class="summary">
+      <h3>📌 Summary</h3>
+      <ul>
+        <li>📄 Each Question with downloadable PDF</li>
+        <li>⏮️ Navigate with buttons or dropdown</li>
+        <li>🚀 Ideal for RPA learners & pros</li>
+       
+      </ul>
+    </aside>
+
+    <main>
+      <select id="dropdown" onchange="goToQuestion(this.value)"></select>
+      <div id="questions-container"></div>
+      <nav>
+        <button onclick="prevQuestion()">Previous</button>
+        <span id="question-number">Question 1 of 100</span>
+        <button onclick="nextQuestion()">Next</button>
+      </nav>
+    </main>
+  </div>
+
   <footer>
     &copy; 2025-26 Darshan Sable. All rights reserved.
   </footer>
+
   <script>
-    const totalQuestions = 110;
+    const totalQuestions = 107;
     let current = 1;
     const container = document.getElementById('questions-container');
     const dropdown = document.getElementById('dropdown');
@@ -166,9 +203,8 @@
       div.id = 'question-' + i;
       div.innerHTML = `
         <h2 style="margin-bottom: 10px;">Question ${i}</h2>
-	<a class="download-btn" href="pdfs/question${i}.pdf" target="_blank" download>📥 Download PDF</a>
+        <a class="download-btn" href="pdfs/question${i}.pdf" target="_blank" download>📅 Download PDF</a>
         <div class="pdf-container" id="pdf-container-${i}">Loading PDF...</div>
-        
       `;
       container.appendChild(div);
 
@@ -195,7 +231,7 @@
           });
         }
       }).catch(err => {
-        container.innerHTML = "Unable to load PDF content.";
+        container.innerHTML = "Coming Soon : This space will soon be filled with fresh content by Darshan Sable!";
         console.error(err);
       });
     }
